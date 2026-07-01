@@ -7,6 +7,7 @@ set -e
 REPO_URL="https://github.com/xuliyuan0924-cmd/skill-all.git"
 INSTALL_DIR="$HOME/feature-pool"
 CURSOR_SKILLS_DIR="$HOME/.cursor/skills"
+OPENCODE_COMMANDS_DIR="$HOME/.config/opencode/commands"
 
 echo ""
 echo "🚀 功能沉淀池安装开始..."
@@ -46,12 +47,29 @@ else
   echo "🔗 feature-add 技能安装完成"
 fi
 
+# ── OpenCode 命令安装 ──────────────────────────
+mkdir -p "$OPENCODE_COMMANDS_DIR"
+
+if [ -L "$OPENCODE_COMMANDS_DIR/feature-pool.md" ]; then
+  echo "🔗 OpenCode /feature-pool 命令链接已存在，跳过"
+else
+  ln -s "$INSTALL_DIR/.opencode/commands/feature-pool.md" "$OPENCODE_COMMANDS_DIR/feature-pool.md"
+  echo "🔗 OpenCode /feature-pool 命令安装完成"
+fi
+
+if [ -L "$OPENCODE_COMMANDS_DIR/feature-add.md" ]; then
+  echo "🔗 OpenCode /feature-add 命令链接已存在，跳过"
+else
+  ln -s "$INSTALL_DIR/.opencode/commands/feature-add.md" "$OPENCODE_COMMANDS_DIR/feature-add.md"
+  echo "🔗 OpenCode /feature-add 命令安装完成"
+fi
+
 echo ""
 echo "✅ 安装完成！"
 echo ""
-echo "使用方式："
-echo "  在 OpenCode 中输入 /feature-pool  → 查找并复用已沉淀的功能"
-echo "  在 OpenCode 中输入 /feature-add   → 将当前项目功能沉淀到池子"
+echo "使用方式（在 OpenCode 对话框输入 / 可看到下拉菜单）："
+echo "  /feature-pool  → 查找并复用已沉淀的功能"
+echo "  /feature-add   → 将当前项目功能沉淀到池子"
 echo ""
 echo "后续更新功能池（在团队有新功能合并后运行）："
 echo "  git -C ~/feature-pool pull"
