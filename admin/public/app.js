@@ -4,6 +4,7 @@ let currentTab = 'pending';
 let lists = { pending: [], approved: [], rejected: [], archived: [] };
 let selectedItem = null;   // { type, data }
 let currentInfoTab = 'skill';
+let rawSkillContent = '';  // 保存原始 SKILL.md，用于一键复制需求描述
 
 const CATEGORIES = {
   navigation: '导航', hero: '首屏', content: '内容', forms: '表单',
@@ -244,13 +245,50 @@ function renderPreview(html) {
   frame.srcdoc = html || '<body style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#888;font-size:14px">暂无预览文件</body>';
 }
 
-function renderSkill(md) {
-  document.getElementById('info-skill').innerHTML = markdownToHtml(md);
+/**
+ * 从 SKILL.md 中提取「有效的需求描述」一节的纯文本内容
+ * @param {string} md
+ * @returns {string}
+ */
+function extractPrompt(md) {
+  const match = md.match(/##\s*有效的需求描述[\s\S]*?\n([\s\S]*?)(?=\n##\s|\s*$)/);
+  if (match) return match[1].trim();
+  // 兜底：返回去掉 frontmatter 后的全文
+  return md.replace(/^---[\s\S]*?---\n?/, '').trim();
 }
 
-function setSkillLoading()   { document.getElementById('info-skill').innerHTML = '<div class="loading-spinner">加载中…</div>'; }
+/** 一键复制需求描述到剪贴板 */
+async function copyPrompt() {
+  const prompt = extractPrompt(rawSkillContent);
+  try {
+    await navigator.clipboard.writeText(prompt);
+    const btn = document.getElementById('copy-prompt-btn');
+    btn.textContent = '✓ 已复制';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '复制需求描述';
+      btn.classList.remove('copied');
+    }, 2000);
+  } catch {
+    showToast('复制失败，请手动选中文字复制', 'error');
+  }
+}
+
+function renderSkill(md) {
+  rawSkillContent = md || '';
+  const panel = document.getElementById('info-skill');
+  panel.innerHTML = `
+    <div class="skill-toolbar">
+      <span class="skill-toolbar-label">粘贴到 OpenCode 对话框，AI 直接执行</span>
+      <button id="copy-prompt-btn" class="btn-copy" onclick="copyPrompt()">复制需求描述</button>
+    </div>
+    ${markdownToHtml(md)}
+  `;
+}
+
+function setSkillLoading()   { rawSkillContent = ''; document.getElementById('info-skill').innerHTML = '<div class="loading-spinner">加载中…</div>'; }
 function setPreviewLoading() { document.getElementById('preview-frame').srcdoc = '<body style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#888;font-size:14px">加载预览中…</body>'; }
-function setSkillError()     { document.getElementById('info-skill').innerHTML = '<div style="padding:20px;color:var(--danger);font-size:13px">加载失败，请刷新重试</div>'; }
+function setSkillError()     { rawSkillContent = ''; document.getElementById('info-skill').innerHTML = '<div style="padding:20px;color:var(--danger);font-size:13px">加载失败，请刷新重试</div>'; }
 
 function clearDetail() {
   selectedItem = null;

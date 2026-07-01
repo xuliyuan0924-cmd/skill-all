@@ -470,6 +470,45 @@ body {
 .modal-card textarea:focus { border-color: var(--danger); }
 .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
 
+/* ── Skill 工具栏 ── */
+.skill-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f0f4ff;
+  border: 1.5px solid #c7d2fe;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 14px;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.skill-toolbar-label {
+  font-size: 11.5px;
+  color: var(--primary);
+  flex: 1;
+}
+
+.btn-copy {
+  padding: 5px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--primary);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s, transform .1s;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+
+.btn-copy:hover { background: var(--primary-hover); }
+.btn-copy:active { transform: scale(.97); }
+.btn-copy.copied { background: var(--success); }
+
 /* ── Loading ── */
 .loading-spinner {
   display: flex;
