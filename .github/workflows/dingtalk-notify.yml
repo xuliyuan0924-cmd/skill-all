@@ -1,0 +1,35 @@
+name: 钉钉通知 PM 审核
+
+on:
+  pull_request:
+    types: [opened, reopened]
+    branches:
+      - main
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 发送钉钉通知
+        env:
+          DINGTALK_WEBHOOK: ${{ secrets.DINGTALK_WEBHOOK_URL }}
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          PR_URL="${{ github.event.pull_request.html_url }}"
+          PR_AUTHOR="${{ github.event.pull_request.user.login }}"
+          PR_BODY="${{ github.event.pull_request.body }}"
+
+          # 截取 PR 描述前 200 字
+          PR_SUMMARY=$(echo "$PR_BODY" | head -c 200)
+
+          curl -s -X POST "$DINGTALK_WEBHOOK" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"msgtype\": \"actionCard\",
+              \"actionCard\": {
+                \"title\": \"📋 功能池新增待审核\",
+                \"text\": \"### ${PR_TITLE}\n\n**提交人**：${PR_AUTHOR}\n\n**摘要**：\n${PR_SUMMARY}...\n\n---\n请及时审核，通过后功能将同步给全体设计师使用。\",
+                \"singleTitle\": \"前往 GitHub 审核\",
+                \"singleURL\": \"${PR_URL}\"
+              }
+            }"

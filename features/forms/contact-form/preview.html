@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>预览：带验证的联系表单</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f7fa;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 560px;
+    }
+
+    .section-title {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .section-title h2 {
+      font-size: 28px;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+    }
+
+    .section-title p {
+      color: #666;
+      font-size: 15px;
+    }
+
+    /* ── 表单卡片 ── */
+    .form-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 36px 40px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07);
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: #333;
+      margin-bottom: 6px;
+    }
+
+    label .required {
+      color: #e53e3e;
+      margin-left: 2px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 15px;
+      color: #1a1a1a;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      outline: none;
+      font-family: inherit;
+    }
+
+    input:focus, textarea:focus {
+      border-color: #4F6EF7;
+      box-shadow: 0 0 0 3px rgba(79, 110, 247, 0.1);
+    }
+
+    input.error, textarea.error {
+      border-color: #e53e3e;
+    }
+
+    input.error:focus, textarea.error:focus {
+      box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.1);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+
+    .error-msg {
+      font-size: 13px;
+      color: #e53e3e;
+      margin-top: 5px;
+      min-height: 18px;
+      display: none;
+    }
+
+    .error-msg.visible { display: block; }
+
+    /* ── 提交按钮 ── */
+    .submit-btn {
+      width: 100%;
+      padding: 13px;
+      background: #4F6EF7;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease, opacity 0.2s ease;
+      margin-top: 8px;
+    }
+
+    .submit-btn:hover { background: #3B5BDB; }
+    .submit-btn:active { background: #2F4AC2; }
+    .submit-btn.loading { opacity: 0.7; cursor: not-allowed; }
+
+    /* ── 成功状态 ── */
+    .success-state {
+      display: none;
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .success-state.visible { display: block; }
+
+    .success-icon {
+      width: 64px;
+      height: 64px;
+      background: #f0fdf4;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 28px;
+    }
+
+    .success-state h3 {
+      font-size: 20px;
+      color: #1a1a1a;
+      margin-bottom: 10px;
+    }
+
+    .success-state p {
+      color: #666;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* ── 预览说明 ── */
+    .preview-badge {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(0,0,0,0.7);
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="section-title">
+      <h2>联系我们</h2>
+      <p>有任何问题或合作意向，欢迎与我们联系</p>
+    </div>
+
+    <div class="form-card">
+      <!-- 表单 -->
+      <form id="contactForm" novalidate>
+        <div class="form-group">
+          <label>姓名 <span class="required">*</span></label>
+          <input type="text" id="name" placeholder="请输入您的姓名">
+          <p class="error-msg" id="nameError">请输入姓名</p>
+        </div>
+
+        <div class="form-group">
+          <label>邮箱 <span class="required">*</span></label>
+          <input type="email" id="email" placeholder="请输入您的邮箱地址">
+          <p class="error-msg" id="emailError">请输入有效的邮箱地址</p>
+        </div>
+
+        <div class="form-group">
+          <label>留言 <span class="required">*</span></label>
+          <textarea id="message" placeholder="请描述您的需求或问题（至少 10 个字符）"></textarea>
+          <p class="error-msg" id="messageError">留言内容至少需要 10 个字符</p>
+        </div>
+
+        <button type="submit" class="submit-btn" id="submitBtn">发送留言</button>
+      </form>
+
+      <!-- 成功状态 -->
+      <div class="success-state" id="successState">
+        <div class="success-icon">✓</div>
+        <h3>留言已发送！</h3>
+        <p>感谢您的留言，我们会在 1-2 个工作日内回复您。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="preview-badge">功能池预览 · 带验证的联系表单</div>
+
+  <script>
+    const form = document.getElementById('contactForm');
+    const nameInput = document.getElementById('name');
+    const emailInput = document.getElementById('email');
+    const messageInput = document.getElementById('message');
+    const submitBtn = document.getElementById('submitBtn');
+    const successState = document.getElementById('successState');
+
+    /** 邮箱格式校验 */
+    function isValidEmail(v) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+    }
+
+    /** 显示 / 隐藏某字段的错误状态 */
+    function setError(input, errorEl, show) {
+      if (show) {
+        input.classList.add('error');
+        errorEl.classList.add('visible');
+      } else {
+        input.classList.remove('error');
+        errorEl.classList.remove('visible');
+      }
+    }
+
+    /** 验证单个字段，返回是否通过 */
+    function validateName() {
+      const ok = nameInput.value.trim().length > 0;
+      setError(nameInput, document.getElementById('nameError'), !ok);
+      return ok;
+    }
+
+    function validateEmail() {
+      const ok = isValidEmail(emailInput.value.trim());
+      setError(emailInput, document.getElementById('emailError'), !ok);
+      return ok;
+    }
+
+    function validateMessage() {
+      const ok = messageInput.value.trim().length >= 10;
+      setError(messageInput, document.getElementById('messageError'), !ok);
+      return ok;
+    }
+
+    /* blur 时校验（离开字段后才报错） */
+    nameInput.addEventListener('blur', validateName);
+    emailInput.addEventListener('blur', validateEmail);
+    messageInput.addEventListener('blur', validateMessage);
+
+    /* 提交时全量校验 */
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const valid = [validateName(), validateEmail(), validateMessage()].every(Boolean);
+      if (!valid) return;
+
+      /* 模拟提交加载状态 */
+      submitBtn.textContent = '发送中...';
+      submitBtn.classList.add('loading');
+
+      setTimeout(() => {
+        form.style.display = 'none';
+        successState.classList.add('visible');
+      }, 1200);
+    });
+  </script>
+</body>
+</html>
