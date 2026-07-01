@@ -11,6 +11,7 @@
   <!-- 登录页 -->
   <div id="login-page">
     <div class="login-card">
+      <div class="login-icon">📦</div>
       <h1>功能沉淀池</h1>
       <p>管理后台 · 请输入访问密码</p>
       <input type="password" id="pwd-input" placeholder="访问密码" autocomplete="current-password">
@@ -19,16 +20,31 @@
     </div>
   </div>
 
-  <!-- 主界面（登录后显示） -->
-  <div id="main-app" style="display:none; flex-direction:column; height:100vh;">
+  <!-- 主界面 -->
+  <div id="main-app" style="display:none">
 
-    <!-- 顶部导航 -->
+    <!-- 顶部 -->
     <div id="header">
-      <span class="logo">功能沉淀池 <span>管理后台</span></span>
-      <span class="badge badge-pending" id="badge-pending">待审核 0</span>
-      <span class="badge badge-approved" id="badge-approved">已上线 0</span>
+      <span class="logo">功能沉淀池</span>
+
+      <!-- 四个 Tab -->
+      <div class="header-tabs">
+        <button class="htab active" id="htab-pending"  onclick="switchTab('pending')">
+          待审核 <span class="htab-count" id="cnt-pending">0</span>
+        </button>
+        <button class="htab" id="htab-approved" onclick="switchTab('approved')">
+          已上线 <span class="htab-count" id="cnt-approved">0</span>
+        </button>
+        <button class="htab" id="htab-rejected" onclick="switchTab('rejected')">
+          已驳回 <span class="htab-count" id="cnt-rejected">0</span>
+        </button>
+        <button class="htab" id="htab-archived" onclick="switchTab('archived')">
+          已下架 <span class="htab-count" id="cnt-archived">0</span>
+        </button>
+      </div>
+
       <div class="header-spacer"></div>
-      <button class="btn btn-ghost" style="font-size:13px" onclick="refreshAll()">刷新</button>
+      <button class="btn btn-ghost btn-sm" onclick="refreshAll()">↻ 刷新</button>
     </div>
 
     <!-- 主体 -->
@@ -36,12 +52,22 @@
 
       <!-- 左侧列表 -->
       <div id="sidebar">
-        <div class="sidebar-tabs">
-          <button class="tab-btn active" id="tab-pending" onclick="switchTab('pending')">待审核</button>
-          <button class="tab-btn" id="tab-approved" onclick="switchTab('approved')">已上线</button>
-        </div>
-        <div class="sidebar-search">
+        <!-- 搜索 + 分类筛选 -->
+        <div class="sidebar-filters">
           <input type="text" id="search-input" placeholder="搜索功能名称…" oninput="filterList()">
+          <select id="category-filter" onchange="filterList()">
+            <option value="">全部分类</option>
+            <option value="navigation">导航</option>
+            <option value="hero">首屏</option>
+            <option value="content">内容</option>
+            <option value="forms">表单</option>
+            <option value="ecommerce">电商</option>
+            <option value="media">媒体</option>
+            <option value="interactive">交互</option>
+            <option value="layout">布局</option>
+            <option value="animation">动效</option>
+            <option value="industry">行业</option>
+          </select>
         </div>
         <div id="feature-list"></div>
       </div>
@@ -49,39 +75,49 @@
       <!-- 右侧详情 -->
       <div id="detail-panel">
 
-        <!-- 空状态 -->
         <div id="empty-state">
-          <span class="icon">📋</span>
-          <p>选择左侧功能卡片查看详情</p>
+          <span class="empty-icon">📋</span>
+          <p>从左侧选择功能卡片查看详情</p>
         </div>
 
-        <!-- 详情内容（选中后显示） -->
-        <div id="detail-content" style="display:none; flex-direction:column; height:100%;">
+        <div id="detail-content" style="display:none">
 
+          <!-- 详情头部 -->
           <div id="detail-header">
-            <div>
+            <div class="detail-info">
               <h2 id="detail-title">—</h2>
               <div class="detail-meta" id="detail-meta">—</div>
             </div>
-            <!-- 审核按钮（仅待审核状态显示） -->
             <div class="header-actions" id="review-actions" style="display:none">
-              <button class="btn btn-danger" onclick="openRejectModal()">✕ 驳回</button>
-              <button class="btn btn-success" onclick="approveCurrentPR()">✓ 通过并合并</button>
+              <button class="btn btn-danger btn-sm" onclick="openRejectModal()">✕ 驳回</button>
+              <button class="btn btn-success btn-sm" id="approve-btn" onclick="approveCurrentPR()">✓ 通过并合并</button>
+            </div>
+            <div class="header-actions" id="approved-actions" style="display:none">
+              <button class="btn btn-warning btn-sm" onclick="archiveCurrent()">⬇ 下架</button>
+            </div>
+            <div class="header-actions" id="archived-actions" style="display:none">
+              <button class="btn btn-primary btn-sm" onclick="restoreCurrent()">⬆ 恢复上线</button>
             </div>
           </div>
 
+          <!-- 内容主体（预览 + 信息） -->
           <div id="detail-body">
-            <!-- 左：预览 -->
+            <!-- 左：预览 iframe -->
             <div id="preview-pane">
-              <div class="pane-title">功能预览效果</div>
+              <div class="pane-title">效果预览</div>
               <iframe id="preview-frame" sandbox="allow-scripts allow-same-origin"></iframe>
             </div>
-            <!-- 右：SKILL.md -->
-            <div id="skill-pane">
-              <div class="pane-title">AI 沟通配方（SKILL.md）</div>
-              <div id="skill-content">
-                <div class="loading-spinner">加载中…</div>
+
+            <!-- 右：信息面板（tabbed） -->
+            <div id="info-pane">
+              <div class="info-tabs">
+                <button class="itab active" id="itab-skill"    onclick="switchInfoTab('skill')">AI 配方</button>
+                <button class="itab"        id="itab-history"  onclick="switchInfoTab('history')">版本历史</button>
+                <button class="itab"        id="itab-reject"   onclick="switchInfoTab('reject')" style="display:none">驳回原因</button>
               </div>
+              <div id="info-skill"   class="info-tab-panel active"><div class="loading-spinner">加载中…</div></div>
+              <div id="info-history" class="info-tab-panel"></div>
+              <div id="info-reject"  class="info-tab-panel"></div>
             </div>
           </div>
 
@@ -90,11 +126,11 @@
     </div>
   </div>
 
-  <!-- 驳回原因弹窗 -->
+  <!-- 驳回弹窗 -->
   <div id="reject-modal">
     <div class="modal-card">
       <h3>驳回功能卡片</h3>
-      <p>请填写驳回原因，将自动评论到 PR 并通知提交人</p>
+      <p>填写驳回原因，将自动评论到 PR 并通知提交人</p>
       <textarea id="reject-reason" placeholder="例如：需求描述不够完整，请补充「关键约束」部分后重新提交。"></textarea>
       <div class="modal-actions">
         <button class="btn btn-ghost" onclick="closeRejectModal()">取消</button>
@@ -103,7 +139,7 @@
     </div>
   </div>
 
-  <!-- Toast 通知 -->
+  <!-- Toast -->
   <div id="toast"></div>
 
   <script src="app.js"></script>

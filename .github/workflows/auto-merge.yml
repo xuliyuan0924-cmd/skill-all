@@ -1,0 +1,95 @@
+name: 自动合并功能更新
+
+on:
+  pull_request:
+    types: [opened, reopened]
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 判断是否为已有功能的更新
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: |
+          # 获取 PR 修改的文件列表
+          FILES=$(gh pr view $PR_NUMBER --json files --jq '.files[].path')
+          echo "修改文件：$FILES"
+
+          # 找出 features/ 下的路径
+          FEATURE_PATH=""
+          for f in $FILES; do
+            if [[ $f == features/* ]]; then
+              # 提取功能目录：features/<category>/<feature-name>
+              FEATURE_PATH=$(echo $f | cut -d'/' -f1-3)
+              break
+            fi
+          done
+
+          if [ -z "$FEATURE_PATH" ]; then
+            echo "is_update=false" >> $GITHUB_OUTPUT
+            echo "未找到 features/ 路径，跳过自动合并"
+            exit 0
+          fi
+
+          # 检查该路径在 main 分支是否已存在
+          if git ls-tree -r origin/main --name-only | grep -q "^${FEATURE_PATH}/"; then
+            echo "is_update=true" >> $GITHUB_OUTPUT
+            echo "feature_path=$FEATURE_PATH" >> $GITHUB_OUTPUT
+            echo "检测到已有功能的更新：$FEATURE_PATH"
+          else
+            echo "is_update=false" >> $GITHUB_OUTPUT
+            echo "这是新功能，走正常审核流程"
+          fi
+
+      - name: 验证提交人是否为原始作者
+        id: verify-author
+        if: steps.check.outputs.is_update == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FEATURE_PATH: ${{ steps.check.outputs.feature_path }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: |
+          # 从 SKILL.md frontmatter 读取原始贡献者（contributor 字段）
+          SKILL_FILE="${FEATURE_PATH}/SKILL.md"
+          if [ -f "$SKILL_FILE" ]; then
+            CONTRIBUTOR=$(grep '^contributor:' "$SKILL_FILE" | sed 's/contributor: *//')
+            echo "原始贡献者：$CONTRIBUTOR，当前提交人：$PR_AUTHOR"
+
+            # 忽略大小写比较
+            if [[ "${CONTRIBUTOR,,}" == "${PR_AUTHOR,,}" ]]; then
+              echo "author_match=true" >> $GITHUB_OUTPUT
+            else
+              echo "author_match=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "author_match=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 自动合并（同一作者更新已有功能）
+        if: steps.check.outputs.is_update == 'true' && steps.verify-author.outputs.author_match == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          FEATURE_PATH: ${{ steps.check.outputs.feature_path }}
+        run: |
+          # 添加自动合并标注评论
+          gh pr comment $PR_NUMBER --body "🤖 **自动合并**：系统检测到这是对已有功能「${FEATURE_PATH}」的更新，且提交人与原始作者一致，已自动合并。"
+
+          # 执行合并
+          gh pr merge $PR_NUMBER --squash --auto --subject "✅ 自动合并功能更新：$(gh pr view $PR_NUMBER --json title --jq '.title')"
+          echo "自动合并完成"
