@@ -1,0 +1,16 @@
+{
+  "name": "feature-pool-admin",
+  "version": "1.0.0",
+  "description": "功能沉淀池 Web 管理后台",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "node-fetch": "^3.3.2",
+    "dotenv": "^16.3.1"
+  }
+}

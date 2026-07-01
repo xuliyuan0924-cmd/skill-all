@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>功能沉淀池 · 管理后台</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- 登录页 -->
+  <div id="login-page">
+    <div class="login-card">
+      <h1>功能沉淀池</h1>
+      <p>管理后台 · 请输入访问密码</p>
+      <input type="password" id="pwd-input" placeholder="访问密码" autocomplete="current-password">
+      <p class="err" id="login-err"></p>
+      <button class="btn btn-primary" style="width:100%" onclick="doLogin()">进入后台</button>
+    </div>
+  </div>
+
+  <!-- 主界面（登录后显示） -->
+  <div id="main-app" style="display:none; flex-direction:column; height:100vh;">
+
+    <!-- 顶部导航 -->
+    <div id="header">
+      <span class="logo">功能沉淀池 <span>管理后台</span></span>
+      <span class="badge badge-pending" id="badge-pending">待审核 0</span>
+      <span class="badge badge-approved" id="badge-approved">已上线 0</span>
+      <div class="header-spacer"></div>
+      <button class="btn btn-ghost" style="font-size:13px" onclick="refreshAll()">刷新</button>
+    </div>
+
+    <!-- 主体 -->
+    <div id="app">
+
+      <!-- 左侧列表 -->
+      <div id="sidebar">
+        <div class="sidebar-tabs">
+          <button class="tab-btn active" id="tab-pending" onclick="switchTab('pending')">待审核</button>
+          <button class="tab-btn" id="tab-approved" onclick="switchTab('approved')">已上线</button>
+        </div>
+        <div class="sidebar-search">
+          <input type="text" id="search-input" placeholder="搜索功能名称…" oninput="filterList()">
+        </div>
+        <div id="feature-list"></div>
+      </div>
+
+      <!-- 右侧详情 -->
+      <div id="detail-panel">
+
+        <!-- 空状态 -->
+        <div id="empty-state">
+          <span class="icon">📋</span>
+          <p>选择左侧功能卡片查看详情</p>
+        </div>
+
+        <!-- 详情内容（选中后显示） -->
+        <div id="detail-content" style="display:none; flex-direction:column; height:100%;">
+
+          <div id="detail-header">
+            <div>
+              <h2 id="detail-title">—</h2>
+              <div class="detail-meta" id="detail-meta">—</div>
+            </div>
+            <!-- 审核按钮（仅待审核状态显示） -->
+            <div class="header-actions" id="review-actions" style="display:none">
+              <button class="btn btn-danger" onclick="openRejectModal()">✕ 驳回</button>
+              <button class="btn btn-success" onclick="approveCurrentPR()">✓ 通过并合并</button>
+            </div>
+          </div>
+
+          <div id="detail-body">
+            <!-- 左：预览 -->
+            <div id="preview-pane">
+              <div class="pane-title">功能预览效果</div>
+              <iframe id="preview-frame" sandbox="allow-scripts allow-same-origin"></iframe>
+            </div>
+            <!-- 右：SKILL.md -->
+            <div id="skill-pane">
+              <div class="pane-title">AI 沟通配方（SKILL.md）</div>
+              <div id="skill-content">
+                <div class="loading-spinner">加载中…</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 驳回原因弹窗 -->
+  <div id="reject-modal">
+    <div class="modal-card">
+      <h3>驳回功能卡片</h3>
+      <p>请填写驳回原因，将自动评论到 PR 并通知提交人</p>
+      <textarea id="reject-reason" placeholder="例如：需求描述不够完整，请补充「关键约束」部分后重新提交。"></textarea>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeRejectModal()">取消</button>
+        <button class="btn btn-danger" onclick="confirmReject()">确认驳回</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast 通知 -->
+  <div id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
