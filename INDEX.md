@@ -44,7 +44,7 @@ _暂无，等待第一个功能沉淀_
 
 ## interactive · 交互组件类
 
-_暂无，等待第一个功能沉淀_
+- [通用筛选标签页](features/interactive/filter-tabs/SKILL.md) — 圆角药丸标签切换内容分类，带 active 高亮和移动端横向滚动 · 筛选, 标签页, 卡片筛选
 
 ---
 
